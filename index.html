@@ -222,10 +222,10 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
 
 <!-- STEPPER -->
 <ol class="stepper" id="stepper">
-  <li class="active" data-step="0">①  上傳圖表</li>
-  <li data-step="1">②  數據確認</li>
-  <li data-step="2">③  風格選擇</li>
-  <li data-step="3">④  預覽下載</li>
+  <li class="active" data-step="0">① 上傳圖表</li>
+  <li data-step="1">② 數據確認</li>
+  <li data-step="2">③ 風格選擇</li>
+  <li data-step="3">④ 預覽下載</li>
 </ol>
 
 <!-- STEP 0: UPLOAD -->
@@ -233,7 +233,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
   <h2>上傳圖表圖片</h2>
   <div class="upload-zone" id="uploadZone">
     <input type="file" accept="image/*" id="fileInput">
-    <div class="icon">📄</div>
+    <div class="icon">📤</div>
     <p><strong>拖放圖片至此</strong>，或點擊選擇檔案</p>
     <div class="formats">支援 JPG、PNG、WebP（最大 10MB）</div>
   </div>
@@ -309,7 +309,8 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
   </div>
 
   <!-- Chart preview (for charts) -->
-  <div class="preview-container" id="stylePreview">    <canvas id="previewChart"></canvas>
+  <div class="preview-container" id="stylePreview">
+    <canvas id="previewChart"></canvas>
   </div>
 
   <!-- Table preview (for tables) -->
@@ -731,7 +732,7 @@ async function analyzeChart() {
     } else {
       // Demo mode with sample data
       result = getDemoData();
-      showStatus('uploadStatus', '⚠️ 未設定 API 連線，將使用示範數據。請在設定中配置 n8n webhook 或 API key。', 'info');
+      showStatus('uploadStatus', '⚠️ 未設定 API 連線，使用示範數據。請在設定中配置 n8n webhook 或 API key。', 'info');
     }
 
     STATE.chartData = result;
@@ -756,9 +757,67 @@ async function callN8nWebhook(url, model) {
       prompt: ANALYSIS_PROMPT,
     }),
   });
-  if (!resp.ok) throw new Error(`Webhook 回應錯誤: ${resp.status}`);
-  const data = await resp.json();
-  return typeof data === 'string' ? JSON.parse(data) : (data.result || data.output || data);
+  if (!resp.ok) {
+    const errText = await resp.text().catch(() => '');
+    throw new Error(`Webhook 回應錯誤 (${resp.status}): ${errText || resp.statusText}`);
+  }
+  const rawText = await resp.text();
+  if (!rawText || !rawText.trim()) {
+    throw new Error('Webhook 回傳空白內容，請檢查 n8n workflow 是否正確設定 ' + model + ' 模型的回應');
+  }
+  let data;
+  try {
+    data = JSON.parse(rawText);
+  } catch (e) {
+    // Response might be wrapped in markdown code fence or have extra text
+    const jsonMatch = rawText.match(/```json?\s*\n?([\s\S]*?)\n?\s*```/);
+    if (jsonMatch) {
+      try { data = JSON.parse(jsonMatch[1]); } catch (_) {}
+    }
+    if (!data) {
+      // Try to find a JSON object in the raw text
+      const objMatch = rawText.match(/\{[\s\S]*\}/);
+      if (objMatch) {
+        try { data = JSON.parse(objMatch[0]); } catch (_) {}
+      }
+    }
+    if (!data) {
+      console.error('Webhook raw response:', rawText.substring(0, 500));
+      throw new Error('Webhook 回傳非 JSON 格式。請檢查 n8n workflow 的 ' + model + ' 輸出節點設定');
+    }
+  }
+  // Handle various response wrapper formats from n8n
+  if (typeof data === 'string') {
+    try { return JSON.parse(data); } catch (_) {
+      throw new Error('Webhook 回傳字串無法解析為 JSON');
+    }
+  }
+  // n8n may wrap output in various keys
+  if (data.result) return typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+  if (data.output) return typeof data.output === 'string' ? JSON.parse(data.output) : data.output;
+  if (data.response) return typeof data.response === 'string' ? JSON.parse(data.response) : data.response;
+  if (data.text) {
+    // Gemini-style: n8n might return { text: "..." } with the AI response as string
+    const text = data.text.trim();
+    try { return JSON.parse(text.replace(/^```json?\n?/, '').replace(/\n?```$/, '')); } catch (_) {
+      throw new Error('Webhook text 欄位無法解析為圖表數據 JSON');
+    }
+  }
+  // If data itself has chart structure keys, return it directly
+  if (data.chart_type || data.datasets || data.labels) return data;
+  // Last resort: check if it's an array with one item (n8n sometimes wraps in array)
+  if (Array.isArray(data) && data.length > 0) {
+    const item = data[0];
+    if (item.result) return typeof item.result === 'string' ? JSON.parse(item.result) : item.result;
+    if (item.output) return typeof item.output === 'string' ? JSON.parse(item.output) : item.output;
+    if (item.text) {
+      const text = item.text.trim();
+      try { return JSON.parse(text.replace(/^```json?\n?/, '').replace(/\n?```$/, '')); } catch (_) {}
+    }
+    if (item.chart_type || item.datasets || item.labels) return item;
+  }
+  console.error('Webhook parsed data:', JSON.stringify(data).substring(0, 500));
+  throw new Error('無法從 Webhook 回應中提取圖表數據，請檢查 n8n workflow 輸出格式');
 }
 
 async function callClaudeDirect(apiKey) {
@@ -1229,7 +1288,7 @@ function exportTable() {
     // Export as standalone HTML file
     const htmlContent = buildTableHTML(data, meta, s, style);
     const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
+const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = `table-${style}.html`;
@@ -1337,7 +1396,7 @@ function exportTableAsPng() {
     ctx.font = `bold 11px ${s.fontFamily}`;
     ctx.fillText(ds.name, padding + 8, y + 22);
     // Values
-    ctx.font = `11px ${s.fontFamily}`;
+   ctx.font = `11px ${s.fontFamily}`;
     for (let ci = 0; ci < ds.values.length; ci++) {
       ctx.fillText(String(ds.values[ci] != null ? ds.values[ci] : ''), padding + (ci + 1) * cellW + 8, y + 22);
     }

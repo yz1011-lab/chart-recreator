@@ -222,10 +222,10 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
 
 <!-- STEPPER -->
 <ol class="stepper" id="stepper">
-  <li class="active" data-step="0">① 上傳圖表</li>
-  <li data-step="1">② 數據確認</li>
-  <li data-step="2">③ 風格選擇</li>
-  <li data-step="3">④ 預覽下載</li>
+  <li class="active" data-step="0">①  上傳圖表</li>
+  <li data-step="1">②  數據確認</li>
+  <li data-step="2">③  風格選擇</li>
+  <li data-step="3">④  預覽下載</li>
 </ol>
 
 <!-- STEP 0: UPLOAD -->
@@ -233,7 +233,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
   <h2>上傳圖表圖片</h2>
   <div class="upload-zone" id="uploadZone">
     <input type="file" accept="image/*" id="fileInput">
-    <div class="icon">📤</div>
+    <div class="icon">📄</div>
     <p><strong>拖放圖片至此</strong>，或點擊選擇檔案</p>
     <div class="formats">支援 JPG、PNG、WebP（最大 10MB）</div>
   </div>
@@ -309,8 +309,7 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
   </div>
 
   <!-- Chart preview (for charts) -->
-  <div class="preview-container" id="stylePreview">
-    <canvas id="previewChart"></canvas>
+  <div class="preview-container" id="stylePreview">    <canvas id="previewChart"></canvas>
   </div>
 
   <!-- Table preview (for tables) -->
@@ -473,10 +472,16 @@ const STYLES = {
 // ============================================================
 // SETTINGS
 // ============================================================
+const DEFAULT_SETTINGS = {
+  webhookUrl: 'https://shawnhuang.app.n8n.cloud/webhook/chart-analyze',
+  model: 'claude',
+  apiKey: '',
+};
 function loadSettings() {
   try {
-    const s = JSON.parse(sessionStorage.getItem('chartRecreatorSettings') || '{}');
-    if (s.webhookUrl) document.getElementById('cfgWebhookUrl').value = s.webhookUrl;
+    const saved = JSON.parse(localStorage.getItem('chartRecreatorSettings') || '{}');
+    const s = { ...DEFAULT_SETTINGS, ...saved };
+    document.getElementById('cfgWebhookUrl').value = s.webhookUrl;
     if (s.model) document.getElementById('cfgModel').value = s.model;
     if (s.apiKey) document.getElementById('cfgApiKey').value = s.apiKey;
     if (s.model) document.getElementById('modelSelect').value = s.model;
@@ -488,12 +493,15 @@ function saveSettings() {
     model: document.getElementById('cfgModel').value,
     apiKey: document.getElementById('cfgApiKey').value.trim(),
   };
-  sessionStorage.setItem('chartRecreatorSettings', JSON.stringify(s));
+  localStorage.setItem('chartRecreatorSettings', JSON.stringify(s));
   document.getElementById('modelSelect').value = s.model;
   closeSettings();
 }
 function getSettings() {
-  try { return JSON.parse(sessionStorage.getItem('chartRecreatorSettings') || '{}'); } catch(e) { return {}; }
+  try {
+    const saved = JSON.parse(localStorage.getItem('chartRecreatorSettings') || '{}');
+    return { ...DEFAULT_SETTINGS, ...saved };
+  } catch(e) { return { ...DEFAULT_SETTINGS }; }
 }
 function openSettings() {
   document.getElementById('settingsModal').classList.add('open');
@@ -723,14 +731,14 @@ async function analyzeChart() {
     } else {
       // Demo mode with sample data
       result = getDemoData();
-      showStatus('uploadStatus', '⚠️ 未設定 API 連線，使用示範數據。請在設定中配置 n8n webhook 或 API key。', 'info');
+      showStatus('uploadStatus', '⚠️ 未設定 API 連線，將使用示範數據。請在設定中配置 n8n webhook 或 API key。', 'info');
     }
 
     STATE.chartData = result;
     populateDataPanel(result);
     goStep(1);
   } catch (err) {
-    showStatus('uploadStatus', `分析失敖: ${err.message}`, 'error');
+    showStatus('uploadStatus', `分析失敗: ${err.message}`, 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '🔍 開始分析';

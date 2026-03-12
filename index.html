@@ -134,6 +134,36 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
 .status-msg.success{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
 .status-msg.info{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
 
+/* ===== CONNECTION STATUS ===== */
+.conn-status{padding:.5rem .75rem;border-radius:6px;font-size:.8rem;margin-top:.5rem}
+.conn-status.ok{background:#d1fae5;color:#065f46;border:1px solid #a7f3d0}
+.conn-status.fail{background:#fee2e2;color:#991b1b;border:1px solid #fecaca}
+.conn-status.testing{background:#dbeafe;color:#1e40af;border:1px solid #bfdbfe}
+
+/* ===== CONTENT TYPE INDICATOR ===== */
+.content-type-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.3rem .8rem;border-radius:20px;font-size:.8rem;font-weight:600;margin-bottom:.75rem}
+.content-type-badge.chart{background:#dbeafe;color:#1e40af}
+.content-type-badge.table{background:#fef3c7;color:#92400e}
+
+/* ===== TABLE PREVIEW (for table mode) ===== */
+.table-preview{overflow-x:auto;margin-top:1rem}
+.table-preview table{width:100%;border-collapse:collapse;font-size:.85rem}
+.table-preview th,.table-preview td{padding:.6rem .8rem;border:1px solid var(--border);text-align:left}
+.table-preview th{font-weight:600;font-size:.8rem}
+.styled-table-ft th{background:#FFF1E0;color:#33302E;border-color:#E8D5B5}
+.styled-table-ft td{border-color:#E8D5B5}
+.styled-table-economist th{background:#E3120B;color:#fff;border-color:#ccc}
+.styled-table-economist td{border-color:#ddd}
+.styled-table-bloomberg th{background:#1A1A2E;color:#00D26A;border-color:#333}
+.styled-table-bloomberg td{background:#0D0D1A;color:#E5E7EB;border-color:#333}
+.styled-table-minimal th{background:#f1f5f9;color:#374151;border-color:#e2e8f0}
+.styled-table-minimal td{border-color:#e2e8f0}
+
+/* ===== TOGGLE SWITCH ===== */
+.toggle-row{display:flex;align-items:center;gap:.75rem;margin:1rem 0;flex-wrap:wrap}
+.toggle-row label{font-size:.85rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:.5rem}
+.toggle-row input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:var(--primary)}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:640px){
   .main{padding:1rem}
@@ -178,8 +208,10 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
       <input type="password" id="cfgApiKey" placeholder="sk-... 或 AIza...">
       <div class="hint">若未設定 n8n webhook，將直接從瀏覽器呼叫 API（key 不會離開本機）</div>
     </div>
+    <div id="connectionStatus" style="margin-bottom:1rem"></div>
     <div class="btn-group">
       <button class="btn btn-primary" onclick="saveSettings()">儲存設定</button>
+      <button class="btn btn-secondary" onclick="testConnection()">🔗 測試連線</button>
       <button class="btn btn-secondary" onclick="closeSettings()">取消</button>
     </div>
   </div>
@@ -271,9 +303,18 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
   <h2>選擇圖表風格</h2>
   <div class="style-grid" id="styleGrid"></div>
 
+  <!-- Chart options (only for charts) -->
+  <div id="chartOptionsRow" class="toggle-row">
+    <label><input type="checkbox" id="toggleDataLabels" onchange="toggleDataLabels(this.checked)"> 在圖上顯示數值標籤</label>
+  </div>
+
+  <!-- Chart preview (for charts) -->
   <div class="preview-container" id="stylePreview">
     <canvas id="previewChart"></canvas>
   </div>
+
+  <!-- Table preview (for tables) -->
+  <div class="table-preview" id="tablePreview" style="display:none"></div>
 
   <div class="btn-group" style="margin-top:1.5rem">
     <button class="btn btn-secondary" onclick="goStep(1)">← 回到數據</button>
@@ -284,41 +325,58 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
 <!-- STEP 3: EXPORT -->
 <div class="panel" id="panel3">
   <h2>預覽與下載</h2>
-  <div class="preview-container" id="exportPreview">
-    <canvas id="exportChart"></canvas>
+
+  <!-- Chart export preview -->
+  <div id="exportChartWrap">
+    <div class="preview-container" id="exportPreview">
+      <canvas id="exportChart"></canvas>
+    </div>
+    <div class="export-options">
+      <div class="opt-group">
+        <label>解析度</label>
+        <select id="exportDpi">
+          <option value="1">1x (72 dpi) — 網頁用</option>
+          <option value="2" selected>2x (150 dpi) — 簡報用</option>
+          <option value="4">4x (300 dpi) — 印刷用</option>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>格式</label>
+        <select id="exportFormat">
+          <option value="png">PNG</option>
+          <option value="svg">SVG</option>
+        </select>
+      </div>
+      <div class="opt-group">
+        <label>尺寸 (px)</label>
+        <select id="exportSize">
+          <option value="800x500">800 × 500</option>
+          <option value="1200x750" selected>1200 × 750</option>
+          <option value="1600x1000">1600 × 1000</option>
+          <option value="1920x1080">1920 × 1080</option>
+        </select>
+      </div>
+    </div>
   </div>
 
-  <div class="export-options">
-    <div class="opt-group">
-      <label>解析度</label>
-      <select id="exportDpi">
-        <option value="1">1x (72 dpi) — 網頁用</option>
-        <option value="2" selected>2x (150 dpi) — 簡報用</option>
-        <option value="4">4x (300 dpi) — 印刷用</option>
-      </select>
-    </div>
-    <div class="opt-group">
-      <label>格式</label>
-      <select id="exportFormat">
-        <option value="png">PNG</option>
-        <option value="svg">SVG</option>
-      </select>
-    </div>
-    <div class="opt-group">
-      <label>尺寸 (px)</label>
-      <select id="exportSize">
-        <option value="800x500">800 × 500</option>
-        <option value="1200x750" selected>1200 × 750</option>
-        <option value="1600x1000">1600 × 1000</option>
-        <option value="1920x1080">1920 × 1080</option>
-      </select>
+  <!-- Table export preview -->
+  <div id="exportTableWrap" style="display:none">
+    <div class="table-preview" id="exportTablePreview"></div>
+    <div class="export-options">
+      <div class="opt-group">
+        <label>匯出格式</label>
+        <select id="tableExportFormat">
+          <option value="html">HTML</option>
+          <option value="png">PNG（圖片）</option>
+        </select>
+      </div>
     </div>
   </div>
 
   <div class="btn-group">
     <button class="btn btn-secondary" onclick="goStep(2)">← 回到風格</button>
-    <button class="btn btn-success" onclick="exportChart()">📥 下載圖表</button>
-    <button class="btn btn-secondary" onclick="exportChart('svg')">📥 下載 SVG</button>
+    <button class="btn btn-success" id="exportMainBtn" onclick="exportChart()">📥 下載圖表</button>
+    <button class="btn btn-secondary" id="exportSvgBtn" onclick="exportChart('svg')">📥 下載 SVG</button>
   </div>
 </div>
 
@@ -333,10 +391,12 @@ const STATE = {
   imageBase64: null,
   imageMime: null,
   chartData: null,      // parsed AI response
+  contentType: 'chart', // 'chart' or 'table'
   selectedStyle: 'ft',
   chartType: 'bar',
   chartInstance: null,
   exportInstance: null,
+  showDataLabels: false, // 是否在圖上顯示數值
 };
 
 const CHART_TYPES = [
@@ -435,9 +495,87 @@ function saveSettings() {
 function getSettings() {
   try { return JSON.parse(sessionStorage.getItem('chartRecreatorSettings') || '{}'); } catch(e) { return {}; }
 }
-function openSettings() { document.getElementById('settingsModal').classList.add('open'); }
+function openSettings() {
+  document.getElementById('settingsModal').classList.add('open');
+  updateConnectionIndicator();
+}
 function closeSettings() { document.getElementById('settingsModal').classList.remove('open'); }
 document.getElementById('settingsModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeSettings(); });
+
+function updateConnectionIndicator() {
+  const el = document.getElementById('connectionStatus');
+  const s = getSettings();
+  if (s.webhookUrl) {
+    el.innerHTML = `<div class="conn-status ok">✅ 已設定 n8n Webhook：${s.webhookUrl.substring(0, 50)}...</div>`;
+  } else if (s.apiKey) {
+    el.innerHTML = `<div class="conn-status ok">✅ 已設定直接 API Key（${s.model === 'gemini' ? 'Gemini' : 'Claude'}）</div>`;
+  } else {
+    el.innerHTML = `<div class="conn-status fail">⚠️ 尚未設定 API 連線，將使用示範數據</div>`;
+  }
+}
+
+async function testConnection() {
+  const el = document.getElementById('connectionStatus');
+  const webhookUrl = document.getElementById('cfgWebhookUrl').value.trim();
+  const apiKey = document.getElementById('cfgApiKey').value.trim();
+  const model = document.getElementById('cfgModel').value;
+
+  if (!webhookUrl && !apiKey) {
+    el.innerHTML = `<div class="conn-status fail">❌ 請先填入 n8n Webhook URL 或 API Key</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="conn-status testing"><span class="spinner" style="border-color:rgba(30,64,175,.2);border-top-color:#1e40af;width:14px;height:14px;vertical-align:middle;margin-right:.5rem"></span>測試連線中...</div>`;
+
+  try {
+    if (webhookUrl) {
+      // Test n8n webhook with a minimal ping
+      const resp = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ping: true }),
+      });
+      if (resp.ok || resp.status === 200) {
+        el.innerHTML = `<div class="conn-status ok">✅ n8n Webhook 連線成功！（HTTP ${resp.status}）</div>`;
+      } else {
+        el.innerHTML = `<div class="conn-status fail">⚠️ Webhook 回應 HTTP ${resp.status}，但連線已建立</div>`;
+      }
+    } else if (apiKey) {
+      if (model === 'claude') {
+        // Test Claude API with a minimal request
+        const resp = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+            'anthropic-version': '2023-06-01',
+            'anthropic-dangerous-direct-browser-access': 'true',
+          },
+          body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] }),
+        });
+        if (resp.ok) {
+          el.innerHTML = `<div class="conn-status ok">✅ Claude API 連線成功！</div>`;
+        } else {
+          const errText = await resp.text();
+          el.innerHTML = `<div class="conn-status fail">❌ Claude API 錯誤：HTTP ${resp.status}</div>`;
+        }
+      } else {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }], generationConfig: { maxOutputTokens: 10 } }),
+        });
+        if (resp.ok) {
+          el.innerHTML = `<div class="conn-status ok">✅ Gemini API 連線成功！</div>`;
+        } else {
+          el.innerHTML = `<div class="conn-status fail">❌ Gemini API 錯誤：HTTP ${resp.status}</div>`;
+        }
+      }
+    }
+  } catch (err) {
+    el.innerHTML = `<div class="conn-status fail">❌ 連線失敗：${err.message}</div>`;
+  }
+}
 
 // ============================================================
 // STEPPER & NAVIGATION
@@ -449,8 +587,41 @@ function goStep(n) {
     li.classList.toggle('done', i < n);
   });
   document.querySelectorAll('.panel').forEach((p, i) => p.classList.toggle('active', i === n));
-  if (n === 2) renderStyleGrid(), renderPreviewChart();
-  if (n === 3) renderExportChart();
+
+  const isTable = STATE.contentType === 'table';
+
+  if (n === 2) {
+    renderStyleGrid();
+    if (isTable) {
+      document.getElementById('chartOptionsRow').style.display = 'none';
+      document.getElementById('stylePreview').style.display = 'none';
+      document.getElementById('tablePreview').style.display = 'block';
+      renderTablePreview('tablePreview');
+    } else {
+      document.getElementById('chartOptionsRow').style.display = 'flex';
+      document.getElementById('stylePreview').style.display = 'block';
+      document.getElementById('tablePreview').style.display = 'none';
+      document.getElementById('toggleDataLabels').checked = STATE.showDataLabels;
+      renderPreviewChart();
+    }
+  }
+  if (n === 3) {
+    if (isTable) {
+      document.getElementById('exportChartWrap').style.display = 'none';
+      document.getElementById('exportTableWrap').style.display = 'block';
+      document.getElementById('exportMainBtn').textContent = '📥 下載表格';
+      document.getElementById('exportMainBtn').onclick = exportTable;
+      document.getElementById('exportSvgBtn').style.display = 'none';
+      renderTablePreview('exportTablePreview');
+    } else {
+      document.getElementById('exportChartWrap').style.display = 'block';
+      document.getElementById('exportTableWrap').style.display = 'none';
+      document.getElementById('exportMainBtn').textContent = '📥 下載圖表';
+      document.getElementById('exportMainBtn').onclick = () => exportChart();
+      document.getElementById('exportSvgBtn').style.display = '';
+      renderExportChart();
+    }
+  }
 }
 
 // ============================================================
@@ -486,27 +657,37 @@ function handleFile(file) {
 // ============================================================
 // AI ANALYSIS
 // ============================================================
-const ANALYSIS_PROMPT = `你是一個專業的圖表數據提取專家。請分析這張圖表圖片並回傳 JSON 格式的結構化數據。
+const ANALYSIS_PROMPT = `你是一個專業的圖表數據提取專家。請分析這張圖片並回傳 JSON 格式的結構化數據。
+
+首先判斷這張圖片是「圖」(chart/graph) 還是「表」(table)：
+- 「圖」：長條圖、折線圖、圓餅圖、散點圖等視覺化圖形
+- 「表」：以行列格式呈現的數據表格（含文字與數字）
 
 請嚴格按照以下 JSON 格式回覆（不要加 markdown code block）：
 {
+  "content_type": "chart|table",
   "confidence": "high|medium|low|insufficient",
   "confidence_reason": "說明數據提取的可信度原因",
-  "chart_type": "bar|line|pie|doughnut|area|scatter|horizontalBar|radar|stacked",
-  "title": "圖表標題",
-  "x_label": "X軸名稱",
-  "y_label": "Y軸名稱",
+  "chart_type": "bar|line|pie|doughnut|area|scatter|horizontalBar|radar|stacked|table",
+  "title": "圖表/表格標題",
+  "x_label": "X軸名稱（表格可留空）",
+  "y_label": "Y軸名稱（表格可留空）",
   "source": "資料來源（如可見）",
   "unit": "數值單位",
-  "description": "圖表整體描述與關鍵發現",
-  "labels": ["標籤1", "標籤2", ...],
+  "description": "圖表/表格整體描述與關鍵發現",
+  "labels": ["欄位標籤1", "欄位標籤2", ...],
   "datasets": [
     {
-      "name": "資料系列名稱",
-      "values": [數值1, 數值2, ...]
+      "name": "列名稱/資料系列名稱",
+      "values": [數值或文字1, 數值或文字2, ...]
     }
   ]
 }
+
+判斷規則：
+- 如果是「表」，content_type 設為 "table"，chart_type 設為 "table"
+- 如果是「圖」，content_type 設為 "chart"，chart_type 設為對應的圖表類型
+- 表格的 values 可以包含文字（字串），不限於數字
 
 數據提取規則：
 1. 如果數值清楚可讀，直接提取（confidence: "high"）
@@ -549,7 +730,7 @@ async function analyzeChart() {
     populateDataPanel(result);
     goStep(1);
   } catch (err) {
-    showStatus('uploadStatus', `分析失敗: ${err.message}`, 'error');
+    showStatus('uploadStatus', `分析失敖: ${err.message}`, 'error');
   } finally {
     btn.disabled = false;
     btn.innerHTML = '🔍 開始分析';
@@ -643,6 +824,9 @@ function getDemoData() {
 // DATA PANEL
 // ============================================================
 function populateDataPanel(data) {
+  // Determine content type
+  STATE.contentType = data.content_type === 'table' ? 'table' : 'chart';
+
   // Confidence badge
   const badgeEl = document.getElementById('confidenceBadge');
   const badgeMap = {
@@ -652,7 +836,12 @@ function populateDataPanel(data) {
     insufficient: ['❌ 資訊不足：無法可靠提取數據', 'badge-error'],
   };
   const [txt, cls] = badgeMap[data.confidence] || badgeMap.medium;
-  badgeEl.innerHTML = `<span class="badge ${cls}">${txt}</span>`;
+
+  // Content type indicator
+  const typeBadge = STATE.contentType === 'table'
+    ? '<span class="content-type-badge table">📋 表格 (Table)</span>'
+    : '<span class="content-type-badge chart">📊 圖表 (Chart)</span>';
+  badgeEl.innerHTML = typeBadge + ` <span class="badge ${cls}">${txt}</span>`;
   if (data.confidence_reason) {
     badgeEl.innerHTML += `<div style="font-size:.8rem;color:var(--text-muted);margin-top:.35rem">${data.confidence_reason}</div>`;
   }
@@ -660,19 +849,50 @@ function populateDataPanel(data) {
   // Description
   document.getElementById('chartDescription').textContent = data.description || '';
 
-  // Chart type select
-  STATE.chartType = data.chart_type || 'bar';
-  renderChartTypeSelect();
+  // Chart type select — only show for charts, hide for tables
+  const chartTypeWrap = document.getElementById('chartTypeSelect');
+  if (STATE.contentType === 'table') {
+    chartTypeWrap.style.display = 'none';
+    STATE.chartType = 'table';
+  } else {
+    chartTypeWrap.style.display = 'flex';
+    STATE.chartType = data.chart_type || 'bar';
+    renderChartTypeSelect();
+  }
 
-  // Meta fields
+  // Meta fields — for tables, hide X/Y axis labels
   document.getElementById('metaTitle').value = data.title || '';
   document.getElementById('metaXLabel').value = data.x_label || '';
   document.getElementById('metaYLabel').value = data.y_label || '';
   document.getElementById('metaSource').value = data.source || '';
   document.getElementById('metaUnit').value = data.unit || '';
 
+  const axisFields = document.querySelectorAll('#metaXLabel, #metaYLabel');
+  axisFields.forEach(f => {
+    f.closest('.field').style.display = STATE.contentType === 'table' ? 'none' : '';
+  });
+
+  // Update step 2 and 3 button text for tables
+  updateStepButtons();
+
   // Data table
   renderDataTable(data.labels, data.datasets);
+}
+
+function updateStepButtons() {
+  const isTable = STATE.contentType === 'table';
+  // Update stepper labels
+  const stepLabels = document.querySelectorAll('.stepper li');
+  if (stepLabels[2]) stepLabels[2].textContent = isTable ? '③ 排版風格' : '③ 風格選擇';
+  if (stepLabels[3]) stepLabels[3].textContent = isTable ? '④ 預覽下載' : '④ 預覽下載';
+
+  // Update panel 1 next button
+  const panel1NextBtn = document.querySelector('#panel1 .btn-primary');
+  if (panel1NextBtn) panel1NextBtn.textContent = isTable ? '下一步：選擇排版 →' : '下一步：選擇風格 →';
+
+  // Update panel 2 title
+  const panel2Title = document.querySelector('#panel2 h2');
+  if (panel2Title) panel2Title.textContent = isTable ? '選擇表格排版風格' : '選擇圖表風格';
 }
 
 function renderChartTypeSelect() {
@@ -762,7 +982,11 @@ function renderStyleGrid() {
 function selectStyle(id) {
   STATE.selectedStyle = id;
   renderStyleGrid();
-  renderPreviewChart();
+  if (STATE.contentType === 'table') {
+    renderTablePreview('tablePreview');
+  } else {
+    renderPreviewChart();
+  }
 }
 
 // ============================================================
@@ -850,6 +1074,14 @@ function buildChartConfig(style, canvasWidth, canvasHeight) {
     },
   };
 
+  // Data labels on chart (custom plugin approach)
+  if (STATE.showDataLabels && !isPie && !isRadar) {
+    // Will be handled by a custom plugin added in renderChart()
+    config._showDataLabels = true;
+    config._dataLabelColor = s.fontColor;
+    config._dataLabelFont = s.fontFamily;
+  }
+
   if (!isPie && !isRadar) {
     config.options.scales = {
       x: {
@@ -902,6 +1134,34 @@ function renderChart(canvasId, style) {
 
   config.plugins = [bgPlugin];
 
+  // Data labels plugin (shows values on chart bars/lines)
+  if (config._showDataLabels) {
+    const dlColor = config._dataLabelColor;
+    const dlFont = config._dataLabelFont;
+    config.plugins.push({
+      id: 'dataLabels',
+      afterDatasetsDraw: (chart) => {
+        const { ctx: c } = chart;
+        chart.data.datasets.forEach((dataset, di) => {
+          const meta = chart.getDatasetMeta(di);
+          if (!meta.hidden) {
+            meta.data.forEach((element, idx) => {
+              const val = dataset.data[idx];
+              if (val == null) return;
+              c.save();
+              c.fillStyle = dlColor;
+              c.font = `bold 10px ${dlFont}`;
+              c.textAlign = 'center';
+              const pos = element.tooltipPosition();
+              c.fillText(typeof val === 'number' ? val.toLocaleString() : val, pos.x, pos.y - 8);
+              c.restore();
+            });
+          }
+        });
+      }
+    });
+  }
+
   const instance = new Chart(ctx, config);
   if (canvasId === 'previewChart') STATE.chartInstance = instance;
   if (canvasId === 'exportChart') STATE.exportInstance = instance;
@@ -909,6 +1169,197 @@ function renderChart(canvasId, style) {
 
 function renderPreviewChart() { renderChart('previewChart', STATE.selectedStyle); }
 function renderExportChart() { renderChart('exportChart', STATE.selectedStyle); }
+
+// ============================================================
+// DATA LABELS TOGGLE (for charts)
+// ============================================================
+function toggleDataLabels(checked) {
+  STATE.showDataLabels = checked;
+  if (STATE.step === 2) renderPreviewChart();
+}
+
+// ============================================================
+// TABLE RENDERING (for table mode)
+// ============================================================
+function renderTablePreview(containerId) {
+  const data = STATE.chartData;
+  if (!data) return;
+  const meta = collectMeta();
+  const style = STATE.selectedStyle;
+  const s = STYLES[style];
+  const styleClass = `styled-table-${style}`;
+
+  let html = '';
+  if (meta.title) html += `<h3 style="font-size:1rem;margin-bottom:.75rem;color:${s.fontColor};font-family:${s.fontFamily}">${meta.title}</h3>`;
+  html += `<table class="data-table ${styleClass}" style="font-family:${s.fontFamily}"><thead><tr><th style="background:${style === 'economist' ? s.colors[0] : ''}">&nbsp;</th>`;
+  data.labels.forEach(l => {
+    html += `<th>${l}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+  data.datasets.forEach(ds => {
+    html += `<tr><td style="font-weight:600">${ds.name}</td>`;
+    ds.values.forEach(v => {
+      html += `<td>${v != null ? v : ''}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  if (meta.source) html += `<div style="font-size:.75rem;color:${s.fontColor}99;margin-top:.5rem;font-family:${s.fontFamily}">${meta.source}</div>`;
+
+  document.getElementById(containerId).innerHTML = html;
+}
+
+function exportTable() {
+  const format = document.getElementById('tableExportFormat').value;
+  const data = STATE.chartData;
+  if (!data) return;
+  const meta = collectMeta();
+  const style = STATE.selectedStyle;
+  const s = STYLES[style];
+
+  if (format === 'html') {
+    // Export as standalone HTML file
+    const htmlContent = buildTableHTML(data, meta, s, style);
+    const blob = new Blob([htmlContent], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `table-${style}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } else if (format === 'png') {
+    // Export table as PNG using html2canvas-like approach
+    exportTableAsPng();
+  }
+}
+
+function buildTableHTML(data, meta, s, style) {
+  const bgMap = { ft: '#FFF1E0', economist: '#FFFFFF', bloomberg: '#0D0D1A', minimal: '#FFFFFF' };
+  const thBgMap = { ft: '#E8D5B5', economist: '#E3120B', bloomberg: '#1A1A2E', minimal: '#f1f5f9' };
+  const thColorMap = { ft: '#33302E', economist: '#fff', bloomberg: '#00D26A', minimal: '#374151' };
+  const bg = bgMap[style] || '#fff';
+  const thBg = thBgMap[style] || '#f1f5f9';
+  const thColor = thColorMap[style] || '#333';
+
+  let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+body{font-family:${s.fontFamily};background:${bg};color:${s.fontColor};padding:2rem;margin:0}
+h2{font-size:1.2rem;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{background:${thBg};color:${thColor};padding:.6rem .8rem;text-align:left;border:1px solid ${s.gridColor}}
+td{padding:.6rem .8rem;border:1px solid ${s.gridColor}}
+.source{font-size:.75rem;color:${s.fontColor}99;margin-top:.75rem}
+</style></head><body>`;
+  if (meta.title) html += `<h2>${meta.title}</h2>`;
+  html += `<table><thead><tr><th></th>`;
+  data.labels.forEach(l => html += `<th>${l}</th>`);
+  html += `</tr></thead><tbody>`;
+  data.datasets.forEach(ds => {
+    html += `<tr><td style="font-weight:600">${ds.name}</td>`;
+    ds.values.forEach(v => html += `<td>${v != null ? v : ''}</td>`);
+    html += `</tr>`;
+  });
+  html += `</tbody></table>`;
+  if (meta.source) html += `<div class="source">${meta.source}</div>`;
+  html += `</body></html>`;
+  return html;
+}
+
+function exportTableAsPng() {
+  // Render table to an offscreen canvas
+  const data = STATE.chartData;
+  const meta = collectMeta();
+  const s = STYLES[STATE.selectedStyle];
+
+  const cellW = 120, cellH = 36, headerH = 40, padding = 20;
+  const cols = data.labels.length + 1;
+  const rows = data.datasets.length + 1;
+  const canvasW = cols * cellW + padding * 2;
+  const canvasH = rows * cellH + headerH + padding * 3 + (meta.title ? 30 : 0);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasW * 2;
+  canvas.height = canvasH * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(2, 2);
+
+  // Background
+  ctx.fillStyle = s.bg;
+  ctx.fillRect(0, 0, canvasW, canvasH);
+
+  let y = padding;
+
+  // Title
+  if (meta.title) {
+    ctx.fillStyle = s.fontColor;
+    ctx.font = `bold 14px ${s.fontFamily}`;
+    ctx.fillText(meta.title, padding, y + 14);
+    y += 30;
+  }
+
+  // Top border (Economist)
+  if (s.topBorder) {
+    ctx.fillStyle = s.topBorder;
+    ctx.fillRect(padding, y, cols * cellW, 3);
+    y += 3;
+  }
+
+  // Header row
+  const thBgMap = { ft: '#E8D5B5', economist: '#E3120B', bloomberg: '#1A1A2E', minimal: '#f1f5f9' };
+  const thColorMap = { ft: '#33302E', economist: '#fff', bloomberg: '#00D26A', minimal: '#374151' };
+  ctx.fillStyle = thBgMap[STATE.selectedStyle] || '#f1f5f9';
+  ctx.fillRect(padding, y, cols * cellW, headerH);
+  ctx.fillStyle = thColorMap[STATE.selectedStyle] || '#333';
+  ctx.font = `bold 11px ${s.fontFamily}`;
+  for (let i = 0; i < data.labels.length; i++) {
+    ctx.fillText(data.labels[i], padding + (i + 1) * cellW + 8, y + 24);
+  }
+  y += headerH;
+
+  // Data rows
+  data.datasets.forEach((ds, ri) => {
+    // Alternating row bg
+    if (ri % 2 === 1) {
+      ctx.fillStyle = s.bg === '#1A1A2E' ? '#151528' : '#f8f9fa';
+      ctx.fillRect(padding, y, cols * cellW, cellH);
+    }
+    // Row name
+    ctx.fillStyle = s.fontColor;
+    ctx.font = `bold 11px ${s.fontFamily}`;
+    ctx.fillText(ds.name, padding + 8, y + 22);
+    // Values
+    ctx.font = `11px ${s.fontFamily}`;
+    for (let ci = 0; ci < ds.values.length; ci++) {
+      ctx.fillText(String(ds.values[ci] != null ? ds.values[ci] : ''), padding + (ci + 1) * cellW + 8, y + 22);
+    }
+    // Row border
+    ctx.strokeStyle = s.gridColor;
+    ctx.beginPath();
+    ctx.moveTo(padding, y + cellH);
+    ctx.lineTo(padding + cols * cellW, y + cellH);
+    ctx.stroke();
+    y += cellH;
+  });
+
+  // Source
+  if (meta.source) {
+    ctx.fillStyle = s.fontColor + '99';
+    ctx.font = `10px ${s.fontFamily}`;
+    ctx.fillText(meta.source, padding, y + 16);
+  }
+
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `table-${STATE.selectedStyle}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 'image/png');
+}
 
 // ============================================================
 // EXPORT

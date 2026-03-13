@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chart Recreator â åè¡¨éè£½å·¥å·</title>
+<title>Chart Recreator — 圖表重製工具</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 /* ===== RESET & BASE ===== */
@@ -181,38 +181,38 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
 <!-- HEADER -->
 <header class="app-header">
   <div>
-    <h1>ð Chart Recreator</h1>
-    <div class="subtitle">ä¸å³åè¡¨ â AI æåæ¸æ â å°æ¥­é¢¨æ ¼éè£½</div>
+    <h1>📊 Chart Recreator</h1>
+    <div class="subtitle">上傳圖表 → AI 提取數據 → 專業風格重製</div>
   </div>
-  <button class="settings-toggle" onclick="openSettings()">âï¸ è¨­å®</button>
+  <button class="settings-toggle" onclick="openSettings()">⚙️ 設定</button>
 </header>
 
 <!-- SETTINGS MODAL -->
 <div class="settings-modal" id="settingsModal">
   <div class="modal-body">
-    <h2>âï¸ é£ç·è¨­å®</h2>
+    <h2>⚙️ 連線設定</h2>
     <div class="field">
       <label>n8n Webhook URL</label>
       <input type="text" id="cfgWebhookUrl" placeholder="https://your-n8n.app.n8n.cloud/webhook/xxxxx">
-      <div class="hint">n8n workflow ç webhook ç«¯é»ï¼ç¨æ¼ AI åè¡¨åæ</div>
+      <div class="hint">n8n workflow 的 webhook 端點，用於 AI 圖表分析</div>
     </div>
     <div class="field">
-      <label>AI æ¨¡ååå¥½</label>
+      <label>AI 模型偏好</label>
       <select id="cfgModel">
         <option value="claude">Claude (Anthropic)</option>
         <option value="gemini">Gemini (Google)</option>
       </select>
     </div>
     <div class="field">
-      <label>åç¨ï¼ç´æ¥ API Keyï¼ä¸ç¶ n8nï¼</label>
-      <input type="password" id="cfgApiKey" placeholder="sk-... æ AIza...">
-      <div class="hint">è¥æªè¨­å® n8n webhookï¼å°ç´æ¥å¾çè¦½å¨å¼å« APIï¼key ä¸æé¢éæ¬æ©ï¼</div>
+      <label>備用：直接 API Key（不經 n8n）</label>
+      <input type="password" id="cfgApiKey" placeholder="sk-... 或 AIza...">
+      <div class="hint">若未設定 n8n webhook，將直接從瀏覽器呼叫 API（key 不會離開本機）</div>
     </div>
     <div id="connectionStatus" style="margin-bottom:1rem"></div>
     <div class="btn-group">
-      <button class="btn btn-primary" onclick="saveSettings()">å²å­è¨­å®</button>
-      <button class="btn btn-secondary" onclick="testConnection()">ð æ¸¬è©¦é£ç·</button>
-      <button class="btn btn-secondary" onclick="closeSettings()">åæ¶</button>
+      <button class="btn btn-primary" onclick="saveSettings()">儲存設定</button>
+      <button class="btn btn-secondary" onclick="testConnection()">🔗 測試連線</button>
+      <button class="btn btn-secondary" onclick="closeSettings()">取消</button>
     </div>
   </div>
 </div>
@@ -222,41 +222,41 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
 
 <!-- STEPPER -->
 <ol class="stepper" id="stepper">
-  <li class="active" data-step="0">â  ä¸å³åè¡¨</li>
-  <li data-step="1">â¡ æ¸æç¢ºèª</li>
-  <li data-step="2">â¢ é¢¨æ ¼é¸æ</li>
-  <li data-step="3">â£ é è¦½ä¸è¼</li>
+  <li class="active" data-step="0">① 上傳圖表</li>
+  <li data-step="1">② 數據確認</li>
+  <li data-step="2">③ 風格選擇</li>
+  <li data-step="3">④ 預覽下載</li>
 </ol>
 
 <!-- STEP 0: UPLOAD -->
 <div class="panel active" id="panel0">
-  <h2>ä¸å³åè¡¨åç</h2>
+  <h2>上傳圖表圖片</h2>
   <div class="upload-zone" id="uploadZone">
     <input type="file" accept="image/*" id="fileInput">
-    <div class="icon">ð¤</div>
-    <p><strong>ææ¾åçè³æ­¤</strong>ï¼æé»æé¸ææªæ¡</p>
-    <div class="formats">æ¯æ´ JPGãPNGãWebPï¼æå¤§ 10MBï¼</div>
+    <div class="icon">📤</div>
+    <p><strong>拖放圖片至此</strong>，或點擊選擇檔案</p>
+    <div class="formats">支援 JPG、PNG、WebP（最大 10MB）</div>
   </div>
   <div class="upload-preview" id="uploadPreview">
-    <img id="previewImg" alt="é è¦½">
+    <img id="previewImg" alt="預覽">
   </div>
   <div class="config-row" id="uploadConfig" style="display:none">
     <div>
-      <label>AI æ¨¡å</label>
+      <label>AI 模型</label>
       <select id="modelSelect">
         <option value="claude">Claude</option>
         <option value="gemini">Gemini</option>
       </select>
     </div>
     <div style="flex:1"></div>
-    <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeChart()">ð éå§åæ</button>
+    <button class="btn btn-primary" id="analyzeBtn" onclick="analyzeChart()">🔍 開始分析</button>
   </div>
   <div class="status-msg" id="uploadStatus"></div>
 </div>
 
 <!-- STEP 1: DATA CONFIRM -->
 <div class="panel" id="panel1">
-  <h2>æ¸æç¢ºèªèç·¨è¼¯</h2>
+  <h2>數據確認與編輯</h2>
   <div id="confidenceBadge" style="margin-bottom:1rem"></div>
   <div id="chartDescription" style="margin-bottom:1rem;font-size:.85rem;color:var(--text-muted);line-height:1.5"></div>
 
@@ -264,48 +264,48 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
 
   <div class="meta-fields" id="metaFields">
     <div class="field full">
-      <label>åè¡¨æ¨é¡</label>
+      <label>圖表標題</label>
       <input type="text" id="metaTitle" placeholder="Chart Title">
     </div>
     <div class="field">
-      <label>X è»¸æ¨ç±¤</label>
+      <label>X 軸標籤</label>
       <input type="text" id="metaXLabel" placeholder="X Axis">
     </div>
     <div class="field">
-      <label>Y è»¸æ¨ç±¤</label>
+      <label>Y 軸標籤</label>
       <input type="text" id="metaYLabel" placeholder="Y Axis">
     </div>
     <div class="field">
-      <label>è³æä¾æº</label>
+      <label>資料來源</label>
       <input type="text" id="metaSource" placeholder="Source: ...">
     </div>
     <div class="field">
-      <label>å®ä½</label>
+      <label>單位</label>
       <input type="text" id="metaUnit" placeholder="e.g. %, USD, millions">
     </div>
   </div>
 
-  <h3 style="font-size:.9rem;margin-bottom:.5rem">æ¸æè¡¨æ ¼</h3>
+  <h3 style="font-size:.9rem;margin-bottom:.5rem">數據表格</h3>
   <div class="data-table-wrap" id="dataTableWrap"></div>
   <div class="btn-group" style="margin-top:.75rem">
-    <button class="btn btn-secondary" onclick="addDataRow()">+ æ°å¢å</button>
-    <button class="btn btn-secondary" onclick="addDataColumn()">+ æ°å¢æ¬</button>
+    <button class="btn btn-secondary" onclick="addDataRow()">+ 新增列</button>
+    <button class="btn btn-secondary" onclick="addDataColumn()">+ 新增欄</button>
   </div>
 
   <div class="btn-group" style="margin-top:1.5rem">
-    <button class="btn btn-secondary" onclick="goStep(0)">â éæ°ä¸å³</button>
-    <button class="btn btn-primary" onclick="goStep(2)">ä¸ä¸æ­¥ï¼é¸æé¢¨æ ¼ â</button>
+    <button class="btn btn-secondary" onclick="goStep(0)">← 重新上傳</button>
+    <button class="btn btn-primary" onclick="goStep(2)">下一步：選擇風格 →</button>
   </div>
 </div>
 
 <!-- STEP 2: STYLE SELECT -->
 <div class="panel" id="panel2">
-  <h2>é¸æåè¡¨é¢¨æ ¼</h2>
+  <h2>選擇圖表風格</h2>
   <div class="style-grid" id="styleGrid"></div>
 
   <!-- Chart options (only for charts) -->
   <div id="chartOptionsRow" class="toggle-row">
-    <label><input type="checkbox" id="toggleDataLabels" onchange="toggleDataLabels(this.checked)"> å¨åä¸é¡¯ç¤ºæ¸å¼æ¨ç±¤</label>
+    <label><input type="checkbox" id="toggleDataLabels" onchange="toggleDataLabels(this.checked)"> 在圖上顯示數值標籤</label>
   </div>
 
   <!-- Chart preview (for charts) -->
@@ -317,14 +317,14 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
   <div class="table-preview" id="tablePreview" style="display:none"></div>
 
   <div class="btn-group" style="margin-top:1.5rem">
-    <button class="btn btn-secondary" onclick="goStep(1)">â åå°æ¸æ</button>
-    <button class="btn btn-primary" onclick="goStep(3)">ä¸ä¸æ­¥ï¼å¯åº â</button>
+    <button class="btn btn-secondary" onclick="goStep(1)">← 回到數據</button>
+    <button class="btn btn-primary" onclick="goStep(3)">下一步：匯出 →</button>
   </div>
 </div>
 
 <!-- STEP 3: EXPORT -->
 <div class="panel" id="panel3">
-  <h2>é è¦½èä¸è¼</h2>
+  <h2>預覽與下載</h2>
 
   <!-- Chart export preview -->
   <div id="exportChartWrap">
@@ -333,27 +333,27 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
     </div>
     <div class="export-options">
       <div class="opt-group">
-        <label>è§£æåº¦</label>
+        <label>解析度</label>
         <select id="exportDpi">
-          <option value="1">1x (72 dpi) â ç¶²é ç¨</option>
-          <option value="2" selected>2x (150 dpi) â ç°¡å ±ç¨</option>
-          <option value="4">4x (300 dpi) â å°å·ç¨</option>
+          <option value="1">1x (72 dpi) — 網頁用</option>
+          <option value="2" selected>2x (150 dpi) — 簡報用</option>
+          <option value="4">4x (300 dpi) — 印刷用</option>
         </select>
       </div>
       <div class="opt-group">
-        <label>æ ¼å¼</label>
+        <label>格式</label>
         <select id="exportFormat">
           <option value="png">PNG</option>
           <option value="svg">SVG</option>
         </select>
       </div>
       <div class="opt-group">
-        <label>å°ºå¯¸ (px)</label>
+        <label>尺寸 (px)</label>
         <select id="exportSize">
-          <option value="800x500">800 Ã 500</option>
-          <option value="1200x750" selected>1200 Ã 750</option>
-          <option value="1600x1000">1600 Ã 1000</option>
-          <option value="1920x1080">1920 Ã 1080</option>
+          <option value="800x500">800 × 500</option>
+          <option value="1200x750" selected>1200 × 750</option>
+          <option value="1600x1000">1600 × 1000</option>
+          <option value="1920x1080">1920 × 1080</option>
         </select>
       </div>
     </div>
@@ -364,19 +364,19 @@ body{font-family:var(--font-sans);background:var(--bg);color:var(--text);min-hei
     <div class="table-preview" id="exportTablePreview"></div>
     <div class="export-options">
       <div class="opt-group">
-        <label>å¯åºæ ¼å¼</label>
+        <label>匯出格式</label>
         <select id="tableExportFormat">
           <option value="html">HTML</option>
-          <option value="png">PNGï¼åçï¼</option>
+          <option value="png">PNG（圖片）</option>
         </select>
       </div>
     </div>
   </div>
 
   <div class="btn-group">
-    <button class="btn btn-secondary" onclick="goStep(2)">â åå°é¢¨æ ¼</button>
-    <button class="btn btn-success" id="exportMainBtn" onclick="exportChart()">ð¥ ä¸è¼åè¡¨</button>
-    <button class="btn btn-secondary" id="exportSvgBtn" onclick="exportChart('svg')">ð¥ ä¸è¼ SVG</button>
+    <button class="btn btn-secondary" onclick="goStep(2)">← 回到風格</button>
+    <button class="btn btn-success" id="exportMainBtn" onclick="exportChart()">📥 下載圖表</button>
+    <button class="btn btn-secondary" id="exportSvgBtn" onclick="exportChart('svg')">📥 下載 SVG</button>
   </div>
 </div>
 
@@ -396,19 +396,19 @@ const STATE = {
   chartType: 'bar',
   chartInstance: null,
   exportInstance: null,
-  showDataLabels: false, // æ¯å¦å¨åä¸é¡¯ç¤ºæ¸å¼
+  showDataLabels: false, // 是否在圖上顯示數值
 };
 
 const CHART_TYPES = [
-  { id: 'bar', label: 'é·æ¢å' },
-  { id: 'line', label: 'æç·å' },
-  { id: 'pie', label: 'åé¤å' },
-  { id: 'doughnut', label: 'ç°å½¢å' },
-  { id: 'area', label: 'é¢ç©å' },
-  { id: 'scatter', label: 'æ£é»å' },
-  { id: 'horizontalBar', label: 'æ©«åé·æ¢' },
-  { id: 'radar', label: 'é·éå' },
-  { id: 'stacked', label: 'å çé·æ¢' },
+  { id: 'bar', label: '長條圖' },
+  { id: 'line', label: '折線圖' },
+  { id: 'pie', label: '圓餅圖' },
+  { id: 'doughnut', label: '環形圖' },
+  { id: 'area', label: '面積圖' },
+  { id: 'scatter', label: '散點圖' },
+  { id: 'horizontalBar', label: '橫向長條' },
+  { id: 'radar', label: '雷達圖' },
+  { id: 'stacked', label: '堆疊長條' },
 ];
 
 // ============================================================
@@ -417,7 +417,7 @@ const CHART_TYPES = [
 const STYLES = {
   ft: {
     name: 'Financial Times',
-    desc: 'ç¶å¸ FT é¢¨æ ¼ï¼ç±³è²èæ¯ãæ·±èè²ç³»ãOxford Blue å¼·èª¿',
+    desc: '經典 FT 風格：米色背景、深藍色系、Oxford Blue 強調',
     colors: ['#0D3B66','#2E5FA1','#5B8FCF','#A3C4E7','#D4A574','#C45B5B'],
     bg: '#FFF1E0',
     gridColor: 'rgba(0,0,0,.08)',
@@ -430,7 +430,7 @@ const STYLES = {
   },
   economist: {
     name: 'The Economist',
-    desc: 'ç¶æ¿å­¸äººé¢¨æ ¼ï¼ç½è²èæ¯ãç´è²å¼·èª¿ãæ¥µç°¡æç',
+    desc: '經濟學人風格：白色背景、紅色強調、極簡排版',
     colors: ['#E3120B','#0D3B66','#6B7280','#F59E0B','#10B981','#8B5CF6'],
     bg: '#FFFFFF',
     gridColor: 'rgba(0,0,0,.06)',
@@ -444,7 +444,7 @@ const STYLES = {
   },
   bloomberg: {
     name: 'Bloomberg',
-    desc: 'æ·±è²ç§ææï¼é»è²èæ¯ãäº®ç¶ è²å¼·èª¿ãæ¸æå¯é',
+    desc: '深色科技感：黑色背景、亮綠色強調、數據密集',
     colors: ['#00D26A','#3B82F6','#F59E0B','#EF4444','#A78BFA','#EC4899'],
     bg: '#1A1A2E',
     gridColor: 'rgba(255,255,255,.08)',
@@ -456,8 +456,8 @@ const STYLES = {
     swatches: ['#1A1A2E','#00D26A','#3B82F6','#F59E0B'],
   },
   minimal: {
-    name: 'ç°¡ç´ / Minimal',
-    desc: 'ä¹¾æ·¨ç°¡ç´é¢¨æ ¼ï¼ç½è²èæ¯ãç°èè²ç³»ãé©åä¸è¬ç¨é',
+    name: '簡約 / Minimal',
+    desc: '乾淨簡約風格：白色背景、灰藍色系、適合一般用途',
     colors: ['#3B82F6','#10B981','#F59E0B','#EF4444','#8B5CF6','#EC4899'],
     bg: '#FFFFFF',
     gridColor: 'rgba(0,0,0,.05)',
@@ -515,11 +515,11 @@ function updateConnectionIndicator() {
   const el = document.getElementById('connectionStatus');
   const s = getSettings();
   if (s.webhookUrl) {
-    el.innerHTML = `<div class="conn-status ok">â å·²è¨­å® n8n Webhookï¼${s.webhookUrl.substring(0, 50)}...</div>`;
+    el.innerHTML = `<div class="conn-status ok">✅ 已設定 n8n Webhook：${s.webhookUrl.substring(0, 50)}...</div>`;
   } else if (s.apiKey) {
-    el.innerHTML = `<div class="conn-status ok">â å·²è¨­å®ç´æ¥ API Keyï¼${s.model === 'gemini' ? 'Gemini' : 'Claude'}ï¼</div>`;
+    el.innerHTML = `<div class="conn-status ok">✅ 已設定直接 API Key（${s.model === 'gemini' ? 'Gemini' : 'Claude'}）</div>`;
   } else {
-    el.innerHTML = `<div class="conn-status fail">â ï¸ å°æªè¨­å® API é£ç·ï¼å°ä½¿ç¨ç¤ºç¯æ¸æ</div>`;
+    el.innerHTML = `<div class="conn-status fail">⚠️ 尚未設定 API 連線，將使用示範數據</div>`;
   }
 }
 
@@ -530,11 +530,11 @@ async function testConnection() {
   const model = document.getElementById('cfgModel').value;
 
   if (!webhookUrl && !apiKey) {
-    el.innerHTML = `<div class="conn-status fail">â è«åå¡«å¥ n8n Webhook URL æ API Key</div>`;
+    el.innerHTML = `<div class="conn-status fail">❌ 請先填入 n8n Webhook URL 或 API Key</div>`;
     return;
   }
 
-  el.innerHTML = `<div class="conn-status testing"><span class="spinner" style="border-color:rgba(30,64,175,.2);border-top-color:#1e40af;width:14px;height:14px;vertical-align:middle;margin-right:.5rem"></span>æ¸¬è©¦é£ç·ä¸­...</div>`;
+  el.innerHTML = `<div class="conn-status testing"><span class="spinner" style="border-color:rgba(30,64,175,.2);border-top-color:#1e40af;width:14px;height:14px;vertical-align:middle;margin-right:.5rem"></span>測試連線中...</div>`;
 
   try {
     if (webhookUrl) {
@@ -545,9 +545,9 @@ async function testConnection() {
         body: JSON.stringify({ ping: true }),
       });
       if (resp.ok || resp.status === 200) {
-        el.innerHTML = `<div class="conn-status ok">â n8n Webhook é£ç·æåï¼ï¼HTTP ${resp.status}ï¼</div>`;
+        el.innerHTML = `<div class="conn-status ok">✅ n8n Webhook 連線成功！（HTTP ${resp.status}）</div>`;
       } else {
-        el.innerHTML = `<div class="conn-status fail">â ï¸ Webhook åæ HTTP ${resp.status}ï¼ä½é£ç·å·²å»ºç«</div>`;
+        el.innerHTML = `<div class="conn-status fail">⚠️ Webhook 回應 HTTP ${resp.status}，但連線已建立</div>`;
       }
     } else if (apiKey) {
       if (model === 'claude') {
@@ -563,10 +563,10 @@ async function testConnection() {
           body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] }),
         });
         if (resp.ok) {
-          el.innerHTML = `<div class="conn-status ok">â Claude API é£ç·æåï¼</div>`;
+          el.innerHTML = `<div class="conn-status ok">✅ Claude API 連線成功！</div>`;
         } else {
           const errText = await resp.text();
-          el.innerHTML = `<div class="conn-status fail">â Claude API é¯èª¤ï¼HTTP ${resp.status}</div>`;
+          el.innerHTML = `<div class="conn-status fail">❌ Claude API 錯誤：HTTP ${resp.status}</div>`;
         }
       } else {
         const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
@@ -575,14 +575,14 @@ async function testConnection() {
           body: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }], generationConfig: { maxOutputTokens: 10 } }),
         });
         if (resp.ok) {
-          el.innerHTML = `<div class="conn-status ok">â Gemini API é£ç·æåï¼</div>`;
+          el.innerHTML = `<div class="conn-status ok">✅ Gemini API 連線成功！</div>`;
         } else {
-          el.innerHTML = `<div class="conn-status fail">â Gemini API é¯èª¤ï¼HTTP ${resp.status}</div>`;
+          el.innerHTML = `<div class="conn-status fail">❌ Gemini API 錯誤：HTTP ${resp.status}</div>`;
         }
       }
     }
   } catch (err) {
-    el.innerHTML = `<div class="conn-status fail">â é£ç·å¤±æï¼${err.message}</div>`;
+    el.innerHTML = `<div class="conn-status fail">❌ 連線失敗：${err.message}</div>`;
   }
 }
 
@@ -618,14 +618,14 @@ function goStep(n) {
     if (isTable) {
       document.getElementById('exportChartWrap').style.display = 'none';
       document.getElementById('exportTableWrap').style.display = 'block';
-      document.getElementById('exportMainBtn').textContent = 'ð¥ ä¸è¼è¡¨æ ¼';
+      document.getElementById('exportMainBtn').textContent = '📥 下載表格';
       document.getElementById('exportMainBtn').onclick = exportTable;
       document.getElementById('exportSvgBtn').style.display = 'none';
       renderTablePreview('exportTablePreview');
     } else {
       document.getElementById('exportChartWrap').style.display = 'block';
       document.getElementById('exportTableWrap').style.display = 'none';
-      document.getElementById('exportMainBtn').textContent = 'ð¥ ä¸è¼åè¡¨';
+      document.getElementById('exportMainBtn').textContent = '📥 下載圖表';
       document.getElementById('exportMainBtn').onclick = () => exportChart();
       document.getElementById('exportSvgBtn').style.display = '';
       renderExportChart();
@@ -648,8 +648,8 @@ uploadZone.addEventListener('drop', e => {
 fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
 
 function handleFile(file) {
-  if (!file.type.startsWith('image/')) return showStatus('uploadStatus', 'è«ä¸å³åçæªæ¡', 'error');
-  if (file.size > 10 * 1024 * 1024) return showStatus('uploadStatus', 'æªæ¡å¤§å°è¶é 10MB éå¶', 'error');
+  if (!file.type.startsWith('image/')) return showStatus('uploadStatus', '請上傳圖片檔案', 'error');
+  if (file.size > 10 * 1024 * 1024) return showStatus('uploadStatus', '檔案大小超過 10MB 限制', 'error');
 
   const reader = new FileReader();
   reader.onload = e => {
@@ -658,7 +658,7 @@ function handleFile(file) {
     document.getElementById('previewImg').src = e.target.result;
     document.getElementById('uploadPreview').style.display = 'block';
     document.getElementById('uploadConfig').style.display = 'flex';
-    showStatus('uploadStatus', `å·²è¼å¥: ${file.name} (${(file.size/1024).toFixed(0)} KB)`, 'success');
+    showStatus('uploadStatus', `已載入: ${file.name} (${(file.size/1024).toFixed(0)} KB)`, 'success');
   };
   reader.readAsDataURL(file);
 }
@@ -666,53 +666,53 @@ function handleFile(file) {
 // ============================================================
 // AI ANALYSIS
 // ============================================================
-const ANALYSIS_PROMPT = `ä½ æ¯ä¸åå°æ¥­çåè¡¨æ¸ææåå°å®¶ãè«åæéå¼µåçä¸¦åå³ JSON æ ¼å¼ççµæ§åæ¸æã
+const ANALYSIS_PROMPT = `你是一個專業的圖表數據提取專家。請分析這張圖片並回傳 JSON 格式的結構化數據。
 
-é¦åå¤æ·éå¼µåçæ¯ãåã(chart/graph) éæ¯ãè¡¨ã(table)ï¼
-- ãåãï¼é·æ¢åãæç·åãåé¤åãæ£é»åç­è¦è¦ºååå½¢
-- ãè¡¨ãï¼ä»¥è¡åæ ¼å¼åç¾çæ¸æè¡¨æ ¼ï¼å«æå­èæ¸å­ï¼
+首先判斷這張圖片是「圖」(chart/graph) 還是「表」(table)：
+- 「圖」：長條圖、折線圖、圓餅圖、散點圖等視覺化圖形
+- 「表」：以行列格式呈現的數據表格（含文字與數字）
 
-è«å´æ ¼æç§ä»¥ä¸ JSON æ ¼å¼åè¦ï¼ä¸è¦å  markdown code blockï¼ï¼
+請嚴格按照以下 JSON 格式回覆（不要加 markdown code block）：
 {
   "content_type": "chart|table",
   "confidence": "high|medium|low|insufficient",
-  "confidence_reason": "èªªææ¸ææåçå¯ä¿¡åº¦åå ",
+  "confidence_reason": "說明數據提取的可信度原因",
   "chart_type": "bar|line|pie|doughnut|area|scatter|horizontalBar|radar|stacked|table",
-  "title": "åè¡¨/è¡¨æ ¼æ¨é¡",
-  "x_label": "Xè»¸åç¨±ï¼è¡¨æ ¼å¯çç©ºï¼",
-  "y_label": "Yè»¸åç¨±ï¼è¡¨æ ¼å¯çç©ºï¼",
-  "source": "è³æä¾æºï¼å¦å¯è¦ï¼",
-  "unit": "æ¸å¼å®ä½",
-  "description": "åè¡¨/è¡¨æ ¼æ´é«æè¿°èééµç¼ç¾",
-  "labels": ["æ¬ä½æ¨ç±¤1", "æ¬ä½æ¨ç±¤2", ...],
+  "title": "圖表/表格標題",
+  "x_label": "X軸名稱（表格可留空）",
+  "y_label": "Y軸名稱（表格可留空）",
+  "source": "資料來源（如可見）",
+  "unit": "數值單位",
+  "description": "圖表/表格整體描述與關鍵發現",
+  "labels": ["欄位標籤1", "欄位標籤2", ...],
   "datasets": [
     {
-      "name": "ååç¨±/è³æç³»ååç¨±",
-      "values": [æ¸å¼ææå­1, æ¸å¼ææå­2, ...]
+      "name": "列名稱/資料系列名稱",
+      "values": [數值或文字1, 數值或文字2, ...]
     }
   ]
 }
 
-å¤æ·è¦åï¼
-- å¦ææ¯ãè¡¨ãï¼content_type è¨­çº "table"ï¼chart_type è¨­çº "table"
-- å¦ææ¯ãåãï¼content_type è¨­çº "chart"ï¼chart_type è¨­çºå°æçåè¡¨é¡å
-- è¡¨æ ¼ç values å¯ä»¥åå«æå­ï¼å­ä¸²ï¼ï¼ä¸éæ¼æ¸å­
+判斷規則：
+- 如果是「表」，content_type 設為 "table"，chart_type 設為 "table"
+- 如果是「圖」，content_type 設為 "chart"，chart_type 設為對應的圖表類型
+- 表格的 values 可以包含文字（字串），不限於數字
 
-æ¸ææåè¦åï¼
-1. å¦ææ¸å¼æ¸æ¥å¯è®ï¼ç´æ¥æåï¼confidence: "high"ï¼
-2. å¦æé¨åæ¸å¼æ¨¡ç³ä½å¯åçæ¨ä¼°ï¼æ¨è¨è¿ä¼¼ï¼confidence: "medium"ï¼
-3. å¦ææ¯æ²ç·åç­é£ä»¥ç²¾ç¢ºè®åçé¡åï¼ç¡å¯è½å¾è¶¨å¢æ¨ä¼°ä»£è¡¨æ§æ¸æé»ï¼confidence: "low"ï¼
-4. å¦æå®å¨ç¡æ³è¾¨è­æè³è¨ä¸è¶³ï¼è¨­ confidence: "insufficient"
+數據提取規則：
+1. 如果數值清楚可讀，直接提取（confidence: "high"）
+2. 如果部分數值模糊但可合理推估，標記近似（confidence: "medium"）
+3. 如果是曲線圖等難以精確讀取的類型，盡可能從趨勢推估代表性數據點（confidence: "low"）
+4. 如果完全無法辨識或資訊不足，設 confidence: "insufficient"
 
-éè¦ï¼åªåå³ç´ JSONï¼ä¸è¦ä»»ä½å¶ä»æå­ã`;
+重要：只回傳純 JSON，不要任何其他文字。`;
 
 async function analyzeChart() {
   if (!STATE.imageBase64) return;
 
   const btn = document.getElementById('analyzeBtn');
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> åæä¸­...';
-  showStatus('uploadStatus', 'æ­£å¨å¼å« AI åæåè¡¨...', 'info');
+  btn.innerHTML = '<span class="spinner"></span> 分析中...';
+  showStatus('uploadStatus', '正在呼叫 AI 分析圖表...', 'info');
 
   try {
     const settings = getSettings();
@@ -732,17 +732,17 @@ async function analyzeChart() {
     } else {
       // Demo mode with sample data
       result = getDemoData();
-      showStatus('uploadStatus', 'â ï¸ æªè¨­å® API é£ç·ï¼ä½¿ç¨ç¤ºç¯æ¸æãè«å¨è¨­å®ä¸­éç½® n8n webhook æ API keyã', 'info');
+      showStatus('uploadStatus', '⚠️ 未設定 API 連線，使用示範數據。請在設定中配置 n8n webhook 或 API key。', 'info');
     }
 
     STATE.chartData = result;
     populateDataPanel(result);
     goStep(1);
   } catch (err) {
-    showStatus('uploadStatus', `åæå¤±æ: ${err.message}`, 'error');
+    showStatus('uploadStatus', `分析失敗: ${err.message}`, 'error');
   } finally {
     btn.disabled = false;
-    btn.innerHTML = 'ð éå§åæ';
+    btn.innerHTML = '🔍 開始分析';
   }
 }
 
@@ -759,11 +759,11 @@ async function callN8nWebhook(url, model) {
   });
   if (!resp.ok) {
     const errText = await resp.text().catch(() => '');
-    throw new Error(`Webhook åæé¯èª¤ (${resp.status}): ${errText || resp.statusText}`);
+    throw new Error(`Webhook 回應錯誤 (${resp.status}): ${errText || resp.statusText}`);
   }
   const rawText = await resp.text();
   if (!rawText || !rawText.trim()) {
-    throw new Error('Webhook åå³ç©ºç½å§å®¹ï¼è«æª¢æ¥ n8n workflow æ¯å¦æ­£ç¢ºè¨­å® ' + model + ' æ¨¡åçåæ');
+    throw new Error('Webhook 回傳空白內容，請檢查 n8n workflow 是否正確設定 ' + model + ' 模型的回應');
   }
   let data;
   try {
@@ -783,13 +783,13 @@ async function callN8nWebhook(url, model) {
     }
     if (!data) {
       console.error('Webhook raw response:', rawText.substring(0, 500));
-      throw new Error('Webhook åå³é JSON æ ¼å¼ãè«æª¢æ¥ n8n workflow ç ' + model + ' è¼¸åºç¯é»è¨­å®');
+      throw new Error('Webhook 回傳非 JSON 格式。請檢查 n8n workflow 的 ' + model + ' 輸出節點設定');
     }
   }
   // Handle various response wrapper formats from n8n
   if (typeof data === 'string') {
     try { return JSON.parse(data); } catch (_) {
-      throw new Error('Webhook åå³å­ä¸²ç¡æ³è§£æçº JSON');
+      throw new Error('Webhook 回傳字串無法解析為 JSON');
     }
   }
   // n8n may wrap output in various keys
@@ -800,7 +800,7 @@ async function callN8nWebhook(url, model) {
     // Gemini-style: n8n might return { text: "..." } with the AI response as string
     const text = data.text.trim();
     try { return JSON.parse(text.replace(/^```json?\n?/, '').replace(/\n?```$/, '')); } catch (_) {
-      throw new Error('Webhook text æ¬ä½ç¡æ³è§£æçºåè¡¨æ¸æ JSON');
+      throw new Error('Webhook text 欄位無法解析為圖表數據 JSON');
     }
   }
   // If data itself has chart structure keys, return it directly
@@ -817,7 +817,7 @@ async function callN8nWebhook(url, model) {
     if (item.chart_type || item.datasets || item.labels) return item;
   }
   console.error('Webhook parsed data:', JSON.stringify(data).substring(0, 500));
-  throw new Error('ç¡æ³å¾ Webhook åæä¸­æååè¡¨æ¸æï¼è«æª¢æ¥ n8n workflow è¼¸åºæ ¼å¼');
+  throw new Error('無法從 Webhook 回應中提取圖表數據，請檢查 n8n workflow 輸出格式');
 }
 
 async function callClaudeDirect(apiKey) {
@@ -841,7 +841,7 @@ async function callClaudeDirect(apiKey) {
       }],
     }),
   });
-  if (!resp.ok) { const e = await resp.text(); throw new Error(`Claude API é¯èª¤: ${e}`); }
+  if (!resp.ok) { const e = await resp.text(); throw new Error(`Claude API 錯誤: ${e}`); }
   const data = await resp.json();
   const text = data.content[0].text.trim();
   return JSON.parse(text.replace(/^```json?\n?/, '').replace(/\n?```$/, ''));
@@ -861,7 +861,7 @@ async function callGeminiDirect(apiKey) {
       generationConfig: { temperature: 0.1, maxOutputTokens: 4096 },
     }),
   });
-  if (!resp.ok) { const e = await resp.text(); throw new Error(`Gemini API é¯èª¤: ${e}`); }
+  if (!resp.ok) { const e = await resp.text(); throw new Error(`Gemini API 錯誤: ${e}`); }
   const data = await resp.json();
   const text = data.candidates[0].content.parts[0].text.trim();
   return JSON.parse(text.replace(/^```json?\n?/, '').replace(/\n?```$/, ''));
@@ -870,14 +870,14 @@ async function callGeminiDirect(apiKey) {
 function getDemoData() {
   return {
     confidence: 'high',
-    confidence_reason: 'ç¤ºç¯æ¸æ â è«è¨­å® API é£ç·ä»¥åæçå¯¦åè¡¨',
+    confidence_reason: '示範數據 — 請設定 API 連線以分析真實圖表',
     chart_type: 'bar',
     title: 'Quarterly Revenue by Region',
     x_label: 'Quarter',
     y_label: 'Revenue (USD millions)',
     source: 'Demo Data',
     unit: 'USD millions',
-    description: 'éæ¯ç¤ºç¯æ¸æï¼å±ç¤ºåå­£åº¦åå°åçæ¶ãè«å¨è¨­å®ä¸­éç½® n8n webhook URL æ API key ä¾åææ¨èªå·±çåè¡¨ã',
+    description: '這是示範數據，展示各季度各地區營收。請在設定中配置 n8n webhook URL 或 API key 來分析您自己的圖表。',
     labels: ['Q1', 'Q2', 'Q3', 'Q4'],
     datasets: [
       { name: 'APAC', values: [42, 58, 65, 72] },
@@ -897,17 +897,17 @@ function populateDataPanel(data) {
   // Confidence badge
   const badgeEl = document.getElementById('confidenceBadge');
   const badgeMap = {
-    high: ['â é«å¯ä¿¡åº¦ï¼æ¸æç´æ¥æå', 'badge-success'],
-    medium: ['â ä¸­ç­å¯ä¿¡åº¦ï¼é¨åæ¸æçºè¿ä¼¼å¼', 'badge-warning'],
-    low: ['ð ä½å¯ä¿¡åº¦ï¼æ¸æçºæ¨ä¼°å¼ï¼å»ºè­°æå°çå¯¦æ¸æé©è­', 'badge-info'],
-    insufficient: ['â è³è¨ä¸è¶³ï¼ç¡æ³å¯é æåæ¸æ', 'badge-error'],
+    high: ['✅ 高可信度：數據直接提取', 'badge-success'],
+    medium: ['≈ 中等可信度：部分數據為近似值', 'badge-warning'],
+    low: ['🔍 低可信度：數據為推估值，建議搜尋真實數據驗證', 'badge-info'],
+    insufficient: ['❌ 資訊不足：無法可靠提取數據', 'badge-error'],
   };
   const [txt, cls] = badgeMap[data.confidence] || badgeMap.medium;
 
   // Content type indicator
   const typeBadge = STATE.contentType === 'table'
-    ? '<span class="content-type-badge table">ð è¡¨æ ¼ (Table)</span>'
-    : '<span class="content-type-badge chart">ð åè¡¨ (Chart)</span>';
+    ? '<span class="content-type-badge table">📋 表格 (Table)</span>'
+    : '<span class="content-type-badge chart">📊 圖表 (Chart)</span>';
   badgeEl.innerHTML = typeBadge + ` <span class="badge ${cls}">${txt}</span>`;
   if (data.confidence_reason) {
     badgeEl.innerHTML += `<div style="font-size:.8rem;color:var(--text-muted);margin-top:.35rem">${data.confidence_reason}</div>`;
@@ -916,7 +916,7 @@ function populateDataPanel(data) {
   // Description
   document.getElementById('chartDescription').textContent = data.description || '';
 
-  // Chart type select â only show for charts, hide for tables
+  // Chart type select — only show for charts, hide for tables
   const chartTypeWrap = document.getElementById('chartTypeSelect');
   if (STATE.contentType === 'table') {
     chartTypeWrap.style.display = 'none';
@@ -927,7 +927,7 @@ function populateDataPanel(data) {
     renderChartTypeSelect();
   }
 
-  // Meta fields â for tables, hide X/Y axis labels
+  // Meta fields — for tables, hide X/Y axis labels
   document.getElementById('metaTitle').value = data.title || '';
   document.getElementById('metaXLabel').value = data.x_label || '';
   document.getElementById('metaYLabel').value = data.y_label || '';
@@ -950,16 +950,16 @@ function updateStepButtons() {
   const isTable = STATE.contentType === 'table';
   // Update stepper labels
   const stepLabels = document.querySelectorAll('.stepper li');
-  if (stepLabels[2]) stepLabels[2].textContent = isTable ? 'â¢ æçé¢¨æ ¼' : 'â¢ é¢¨æ ¼é¸æ';
-  if (stepLabels[3]) stepLabels[3].textContent = isTable ? 'â£ é è¦½ä¸è¼' : 'â£ é è¦½ä¸è¼';
+  if (stepLabels[2]) stepLabels[2].textContent = isTable ? '③ 排版風格' : '③ 風格選擇';
+  if (stepLabels[3]) stepLabels[3].textContent = isTable ? '④ 預覽下載' : '④ 預覽下載';
 
   // Update panel 1 next button
   const panel1NextBtn = document.querySelector('#panel1 .btn-primary');
-  if (panel1NextBtn) panel1NextBtn.textContent = isTable ? 'ä¸ä¸æ­¥ï¼é¸ææç â' : 'ä¸ä¸æ­¥ï¼é¸æé¢¨æ ¼ â';
+  if (panel1NextBtn) panel1NextBtn.textContent = isTable ? '下一步：選擇排版 →' : '下一步：選擇風格 →';
 
   // Update panel 2 title
   const panel2Title = document.querySelector('#panel2 h2');
-  if (panel2Title) panel2Title.textContent = isTable ? 'é¸æè¡¨æ ¼æçé¢¨æ ¼' : 'é¸æåè¡¨é¢¨æ ¼';
+  if (panel2Title) panel2Title.textContent = isTable ? '選擇表格排版風格' : '選擇圖表風格';
 }
 
 function renderChartTypeSelect() {
@@ -987,7 +987,7 @@ function renderDataTable(labels, datasets) {
     for (let ci = 0; ci < maxCols; ci++) {
       html += `<td><input type="text" value="${ds.values[ci] ?? ''}" onchange="updateValue(${ri},${ci},this.value)"></td>`;
     }
-    html += `<td class="row-actions"><button onclick="removeDataRow(${ri})" title="åªé¤">â</button></td></tr>`;
+    html += `<td class="row-actions"><button onclick="removeDataRow(${ri})" title="刪除">✕</button></td></tr>`;
   });
   html += '</tbody></table>';
   document.getElementById('dataTableWrap').innerHTML = html;
